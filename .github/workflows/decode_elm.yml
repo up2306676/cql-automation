@@ -1,0 +1,38 @@
+name: Translate CQL to ELM
+
+on:
+  push:
+    paths:
+      - 'cql/**/*.cql'
+  workflow_dispatch:
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - name: Download CQL Translator CLI
+      run: |
+        curl -L -o cql-translator.jar https://github.com/cqframework/cql-translator/releases/latest/download/cql-translator-4.0.0.jar
+
+    - name: Translate CQL to ELM JSON
+      run: |
+        mkdir -p elm
+        for file in cql/*.cql; do
+          java -jar cql-translator.jar "$file" --format=JSON -o elm/
+        done
+
+    - name: Upload ELM files as artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: elm-json
+        path: elm/*.json
